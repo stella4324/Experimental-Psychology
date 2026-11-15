@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>정보 탐색 실험</title>
+
+<style>
+:root {
+  font-family: system-ui, "Noto Sans KR", sans-serif;
+  color: #203047;
+  background: #f4f7fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+.wrap {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+h1 {
+  font-size: 26px;
+  margin: 0 0 18px;
+}
+.box {
+  background: white;
+  border: 1px solid #dfe6ef;
+  padding: 24px;
+  border-radius: 14px;
+}
+p { line-height: 1.7; }
+
+button {
+  border: 1px solid #aab8ce;
+  background: white;
+  border-radius: 7px;
+  padding: 9px 13px;
+  cursor: pointer;
+  font: inherit;
+}
+button:hover { background: #e9f0fa; }
+
+.main {
+  background: #285aab;
+  color: white;
+  border-color: #285aab;
+}
+.main:hover { background: #214a91; }
+
+.stop { color: #a23f3f; }
+.hidden { display: none !important; }
+
+.note {
+  color: #5d6e83;
+  font-size: 14px;
+}
+.status {
+  margin-top: 12px;
+  color: #526782;
+  font-size: 14px;
+}
+.err {
+  color: #ad2525;
+  font-weight: 650;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.target {
+  font-weight: bold;
+  font-size: 19px;
+}
+.scroll {
+  overflow-x: auto;
+  border: 1px solid #dce4ee;
+  border-radius: 9px;
+  padding: 15px 6px 10px;
+}
+.bars {
+  display: grid;
+  grid-template-columns: repeat(20, 50px);
+  gap: 3px;
+  min-width: 1057px;
+  align-items: end;
+}
+.slot { text-align: center; }
+.percent {
+  font-size: 12px;
+  font-weight: 650;
+}
+.axis {
+  height: 115px;
+  width: 35px;
+  margin: 5px auto;
+  display: flex;
+  align-items: end;
+  background: #edf2f9;
+}
+.bar {
+  width: 35px;
+  background: #548bc6;
+}
+.label {
+  font-size: 12px;
+  margin: 6px 0;
+}
+.pick {
+  padding: 7px;
+  font-size: 12px;
+}
+.picked { background: #dce9fb; }
+
+.feedback {
+  padding: 14px;
+  background: #edf4fb;
+  border-radius: 8px;
+  margin: 16px 0;
+  min-height: 48px;
+  font-weight: 650;
+}
+.btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+label {
+  display: block;
+  margin: 10px 0;
+}
+textarea {
+  width: 100%;
+  height: 90px;
+  padding: 10px;
+}
+h2 {
+  font-size: 19px;
+  margin: 0 0 14px;
+}
+</style>
+</head>
+
+<body>
+<main class="wrap">
+  <h1>정보 탐색 실험</h1>
+
+  <section class="box" id="screen"></section>
+
+  <div id="status" class="status"></div>
+
+  <button
+    id="retry"
+    class="hidden"
+    onclick="retry()"
+  >
+    저장 재시도
+  </button>
+</main>
+
+<script>
+
+/* ======================================
+   직접 수정할 부분
+====================================== */
+
+const SUPABASE_URL =
+  'https://fesuqweropbeudhnnsop.supabase.co/rest/v1/';
+
+const SUPABASE_PUBLISHABLE_KEY =
+  'sb_publishable_c5bdNtdnE-Xs6TAEtlMzdA_76kwMnhi';
+
+const RESEARCH_EMAIL =
+  'stella4324@snu.ac.kr';
+
+const DURATION =
+  '약 10분 내외';
+
+/* ======================================
+   실험 자극
+   각 쌍의 A/B는 확률값 구성이 동일함
+====================================== */
+
+const DATA = [
+
+[5,
+[98,75,60,39,175,75,81,16,53,24,
+18,32,54,60,28,20,24,23,22,23],
+[24,20,24,16,175,23,39,18,23,60,
+60,22,75,32,54,98,53,81,75,28]],
+
+[6,
+[74,94,57,12,16,195,28,88,18,60,
+81,21,25,52,24,16,43,44,28,24],
+[28,43,18,12,16,195,52,57,24,16,
+28,21,60,94,88,74,44,25,81,24]],
+
+[7,
+[17,25,76,93,59,94,190,72,55,55,
+43,23,24,45,25,17,20,14,24,29],
+[25,20,23,17,24,25,190,14,55,24,
+43,29,93,59,55,94,45,17,72,76]],
+
+[8,
+[54,51,23,59,32,87,73,195,93,61,
+76,19,25,18,23,15,19,15,42,20],
+[18,23,15,25,15,20,19,195,54,19,
+61,32,59,93,76,42,87,73,51,23]],
+
+[9,
+[18,42,55,14,78,19,27,25,185,93,
+53,83,96,44,21,61,21,31,14,20],
+[20,25,21,18,14,21,19,14,185,44,
+31,42,27,55,96,93,83,53,78,61]],
+
+[12,
+[27,13,14,14,29,62,40,97,39,91,
+18,185,56,21,39,88,94,21,24,28],
+[88,62,94,29,91,18,97,40,39,56,
+21,185,39,27,28,21,14,13,14,24]],
+
+[13,
+[24,28,23,31,52,14,51,96,81,41,
+12,43,175,23,18,95,29,84,57,23],
+[18,43,57,96,84,81,95,24,41,23,
+51,52,175,28,31,23,23,29,12,14]],
+
+[14,
+[14,22,18,29,13,18,30,53,23,24,
+39,29,40,180,73,51,92,98,94,60],
+[94,92,60,73,51,98,39,40,29,29,
+18,53,14,180,18,23,24,30,13,22]],
+
+[15,
+[34,23,18,24,20,32,51,13,59,12,
+74,16,84,60,180,86,32,44,61,77],
+[24,86,84,74,77,12,34,18,60,23,
+61,51,32,59,180,44,13,32,20,16]],
+
+[16,
+[20,14,18,20,25,28,14,31,56,48,
+95,55,32,51,24,180,72,83,61,73],
+[95,72,73,83,48,51,55,20,31,32,
+14,25,61,18,56,180,20,28,24,14]]
+
+];
+
+/* ======================================
+   실험 설정
+====================================== */
+
+const STIMULI = DATA.flatMap(
+  ([peak,a,b],i) => [
+    {
+      id: `S${i+1}A`,
+      pair: i+1,
+      condition: 'A',
+      peak,
+      p: a
+    },
+    {
+      id: `S${i+1}B`,
+      pair: i+1,
+      condition: 'B',
+      peak,
+      p: b
+    }
+  ]
+);
+
+const PRACTICE = [
+  {
+    id: 'P1',
+    condition: 'practice',
+    peak: null,
+    p: Array(20).fill(50)
+  },
+  {
+    id: 'P2',
+    condition: 'practice',
+    peak: null,
+    p: [
+      40,55,45,60,45,35,70,40,55,35,
+      60,45,50,55,35,65,45,50,45,70
+    ]
+  }
+];
+
+const KEY = 'search_experiment_2026_v1';
+
+const screen = document.getElementById('screen');
+const status = document.getElementById('status');
+const retryButton = document.getElementById('retry');
+
+let S = null;
+let Q = [];
+let sending = false;
+let saveError = '';
+
+const uuid = () => crypto.randomUUID();
+
+function shuffle(a) {
+  for (let i=a.length-1; i>0; i--) {
+    let j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function sample(p) {
+  let x = Math.floor(Math.random()*1000);
+  let s = 0;
+
+  for (let i=0; i<p.length; i++) {
+    s += p[i];
+    if (x<s) return i+1;
+  }
+
+  throw Error('확률 합계 오류');
+}
+
+function plan() {
+  for (let attempt=0; attempt<10000; attempt++) {
+    let a = shuffle(
+      STIMULI.filter(x=>x.condition==='A').slice()
+    );
+
+    let b = shuffle(
+      STIMULI.filter(x=>x.condition==='B').slice()
+    );
+
+    let out = [];
+
+    for (let j=0; j<5; j++) {
+      out.push(...shuffle([
+        ...a.slice(j*2,j*2+2),
+        ...b.slice(j*2,j*2+2)
+      ]));
+    }
+
+    let seen = {};
+    let ok = true;
+
+    for (let i=0; i<out.length; i++) {
+      if (
+        seen[out[i].pair]!==undefined &&
+        i-seen[out[i].pair]<3
+      ) {
+        ok = false;
+        break;
+      }
+      seen[out[i].pair]=i;
+    }
+
+    if (ok) {
+      return [...PRACTICE,...out].map(x=>({
+        ...x,
+        target: sample(x.p),
+        number: 100+Math.floor(Math.random()*800)
+      }));
+    }
+  }
+
+  throw Error('시행 순서 생성 오류');
+}
+
+function save() {
+  localStorage.setItem(
+    KEY,
+    JSON.stringify({S,Q})
+  );
+  setStatus();
+}
+
+function setStatus() {
+  status.textContent = saveError
+    ? `저장 오류: ${saveError} (저장 재시도 필요)`
+    : Q.length
+      ? `응답 ${Q.length}건 전송 중. 완료 후 종료해 주세요.`
+      : '저장 상태: 정상';
+
+  retryButton.classList.toggle(
+    'hidden',
+    !saveError
+  );
+}
+
+function event(kind,extra={}) {
+  return {
+    event_id: uuid(),
+    session_id: S.id,
+    kind,
+    trial_no: S.i<22 ? S.i+1 : null,
+    condition: S.i<22
+      ? S.trials[S.i].condition
+      : null,
+    stimulus_id: S.i<22
+      ? S.trials[S.i].id
+      : null,
+    peak_position: S.i<22
+      ? S.trials[S.i].peak
+      : null,
+    target_position: S.i<22
+      ? S.trials[S.i].target
+      : null,
+    ...extra
+  };
+}
+
+function enqueue(e) {
+  Q.push(e);
+  save();
+  void flush();
+}
+
+async function flush() {
+  if (sending || saveError) return;
+
+  sending = true;
+
+  while (Q.length && !saveError) {
+    let e = Q[0];
+
+    try {
+      let r = await fetch(
+        SUPABASE_URL.replace(/\/$/,'') +
+        '/rest/v1/experiment_events',
+        {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(e)
+        }
+      );
+
+      if (!r.ok) {
+        let t = await r.text();
+
+        if (
+          r.status!==409 ||
+          !t.includes('23505')
+        ) {
+          throw Error(
+            `HTTP ${r.status}: ${t.slice(0,180)}`
+          );
+        }
+      }
+
+      Q.shift();
+      save();
+
+    } catch(x) {
+      saveError = x.message;
+      setStatus();
+    }
+  }
+
+  sending = false;
+  setStatus();
+}
+
+async function drain() {
+  while (sending) {
+    await new Promise(
+      r=>setTimeout(r,80)
+    );
+  }
+
+  return !saveError && !Q.length;
+}
+
+function retry() {
+  saveError = '';
+  setStatus();
+  void flush();
+}
+
+function show(html) {
+  screen.innerHTML = html;
+}
+
+/* ======================================
+   연구 참여 안내
+====================================== */
+
+function consent() {
+  show(`
+    <h2>연구 참여 안내 및 동의</h2>
+
+    <p>
+      본 연구는 확률 정보가 주어진 상황에서의
+      정보 탐색 행동을 살펴보는
+      <b>실험심리입문 및 실험 수업 과제</b>입니다.
+    </p>
+
+    <p>
+      만 18세 이상 성인이 참여할 수 있으며,
+      연습 2회와 본 실험 20회를 진행합니다.
+      예상 소요시간: ${DURATION}.
+    </p>
+
+    <p>
+      참여는 자발적이고 언제든 중단할 수 있습니다.
+      중단 이전에 전송된 응답은 수업 과제 분석에
+      사용될 수 있습니다.
+    </p>
+
+    <p>
+      이름·학번·연락처는 수집하지 않습니다.
+      자료는 수업 과제 목적으로만 사용하고
+      공개하지 않으며 성적 확정 후 삭제합니다.
+      사이트 제공·저장 서비스의 기술적 접속 로그는
+      별도 정책에 따릅니다.
+    </p>
+
+    <p>문의: ${RESEARCH_EMAIL}</p>
+
+    <label>
+      <input id="adult" type="checkbox">
+      만 18세 이상입니다.
+    </label>
+
+    <label>
+      <input id="agree" type="checkbox">
+      안내를 읽고 연구 참여에 동의합니다.
+    </label>
+
+    <button class="main" onclick="start()">
+      동의하고 시작
+    </button>
+
+    <p id="msg" class="err"></p>
+  `);
+}
+
+async function start() {
+  if (
+    !document.getElementById('adult').checked ||
+    !document.getElementById('agree').checked
+  ) {
+    document.getElementById('msg').textContent =
+      '연령 확인과 동의가 필요합니다.';
+    return;
+  }
+
+  if (
+    SUPABASE_URL.includes('YOUR_PROJECT') ||
+    SUPABASE_PUBLISHABLE_KEY.includes('REPLACE_ME') ||
+    RESEARCH_EMAIL.startsWith('연구자')
+  ) {
+    document.getElementById('msg').textContent =
+      '코드 상단의 저장 정보와 연구자 이메일을 수정해 주세요.';
+    return;
+  }
+
+  S = {
+    id: uuid(),
+    i: 0,
+    trials: plan(),
+    clicks: [],
+    done: false,
+    startedAt: Date.now(),
+    trialStart: 0,
+    stage: 'instructions'
+  };
+
+  Q = [];
+  saveError = '';
+  save();
+
+  enqueue(event('start'));
+  await drain();
+
+  if (saveError) {
+    show(`
+      <p class="err">
+        데이터 저장 연결에 실패했습니다.
+        저장 재시도 버튼을 눌러 주세요.
+        저장이 정상화되면 새로고침하고
+        이어서 진행할 수 있습니다.
+      </p>
+    `);
+    return;
+  }
+
+  instructions();
+}
+
+function instructions() {
+  S.stage = 'instructions';
+  save();
+
+  show(`
+    <h2>실험 방법</h2>
+
+    <p>
+      20개의 카드는 왼쪽부터 오른쪽으로
+      숫자가 증가하도록 정렬되어 있습니다.
+      목표 숫자는 반드시 카드 하나에 있습니다.
+    </p>
+
+    <p>
+      각 위치 위의 막대와 숫자는
+      목표 숫자가 그 위치에 있을 확률입니다.
+      원하는 카드를 자유롭게 확인할 수 있습니다.
+    </p>
+
+    <p>
+      선택한 카드의 숫자가 목표보다 작은지,
+      큰지 또는 같은지 알려줍니다.
+      정답을 찾을 때까지 선택하세요.
+    </p>
+
+    <p>
+      가능한 한 <b>적은 횟수</b>로
+      정답을 찾으세요.
+      연습 2회 뒤 본 실험 20회가 시작됩니다.
+    </p>
+
+    <div class="btns">
+      <button class="main" onclick="begin()">
+        실험 시작 / 이어서 진행
+      </button>
+
+      <button class="stop" onclick="withdraw()">
+        참여 중단
+      </button>
+    </div>
+  `);
+}
+
+function begin() {
+  S.stage = 'trial';
+
+  if (!S.trialStart) {
+    S.trialStart = Date.now();
+  }
+
+  save();
+  draw();
+}
+
+/* ======================================
+   실험 화면
+====================================== */
+
+function draw() {
+  if (!S) return;
+
+  if (S.i>=22) {
+    survey();
+    return;
+  }
+
+  S.stage = 'trial';
+
+  let t = S.trials[S.i];
+
+  let m = S.i<2
+    ? `연습 ${S.i+1}/2`
+    : `본 실험 ${S.i-1}/20`;
+
+  let last = S.clicks.at(-1);
+
+  let fb = !last
+    ? '원하는 위치부터 확인하세요.'
+    : last.feedback==='correct'
+      ? '정답입니다.'
+      : last.feedback==='right'
+        ? '선택한 카드보다 오른쪽에 목표 숫자가 있습니다.'
+        : '선택한 카드보다 왼쪽에 목표 숫자가 있습니다.';
+
+  show(`
+    <div class="row">
+      <h2>${m}</h2>
+      <span class="target">
+        목표 숫자: ${t.number}
+      </span>
+    </div>
+
+    <p class="note">
+      20개 위치의 사전확률
+      (각 막대는 0~20% 기준, 좌우 스크롤 가능)
+    </p>
+
+    <div class="scroll">
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <div class="feedback" id="feedback">
+      ${fb}
+    </div>
+
+    <div class="btns">
+      <button
+        class="main ${S.done?'':'hidden'}"
+        id="next"
+        onclick="next()"
+      >
+        다음 시행
+      </button>
+
+      <button class="stop" onclick="withdraw()">
+        참여 중단
+      </button>
+    </div>
+  `);
+
+  let bars = document.getElementById('bars');
+
+  t.p.forEach((u,i)=>{
+    let div = document.createElement('div');
+    div.className = 'slot';
+
+    div.innerHTML = `
+      <div class="percent">
+        ${(u/10).toFixed(1)}%
+      </div>
+
+      <div class="axis">
+        <div
+          class="bar"
+          style="height:${u/200*115}px"
+        ></div>
+      </div>
+
+      <div class="label">
+        ${i+1}번
+      </div>
+    `;
+
+    let b = document.createElement('button');
+
+    b.className =
+      'pick' +
+      (S.clicks.some(x=>x.position===i+1)
+        ? ' picked'
+        : '');
+
+    b.textContent = '확인';
+    b.disabled = S.done;
+
+    b.addEventListener(
+      'click',
+      ()=>click(i+1)
+    );
+
+    div.appendChild(b);
+    bars.appendChild(div);
+  });
+
+  save();
+}
+
+function click(k) {
+  if (!S || S.done) return;
+
+  let t = S.trials[S.i];
+
+  let lo = 1;
+  let hi = 20;
+
+  for (let c of S.clicks) {
+    if (c.position<t.target) {
+      lo = Math.max(lo,c.position+1);
+    }
+
+    if (c.position>t.target) {
+      hi = Math.min(hi,c.position-1);
+    }
+  }
+
+  let invalid = k<lo || k>hi;
+
+  let feedback =
+    k===t.target
+      ? 'correct'
+      : k<t.target
+        ? 'right'
+        : 'left';
+
+  let rec = {
+    position: k,
+    feedback,
+    invalid,
+    rt_ms: Date.now()-S.trialStart,
+    click_index: S.clicks.length+1
+  };
+
+  S.clicks.push(rec);
+
+  enqueue(
+    event('click',{
+      click_index: rec.click_index,
+      click_position: k,
+      feedback,
+      invalid_click: invalid,
+      rt_ms: rec.rt_ms,
+      probabilities: t.p
+    })
+  );
+
+  if (k===t.target) {
+    S.done = true;
+
+    enqueue(
+      event('trial_done',{
+        total_clicks: S.clicks.length
+      })
+    );
+  }
+
+  draw();
+}
+
+function next() {
+  if (!S.done) return;
+
+  S.i++;
+  S.done = false;
+  S.clicks = [];
+  S.trialStart = Date.now();
+
+  save();
+  draw();
+}
+
+/* ======================================
+   종료 및 중단
+====================================== */
+
+function survey() {
+  S.stage = 'survey';
+  save();
+
+  show(`
+    <h2>실험 완료</h2>
+
+    <p>
+      카드 위치를 선택할 때 주로
+      어떤 기준으로 판단했나요?
+      (선택 사항)
+    </p>
+
+    <textarea
+      id="answer"
+      maxlength="1200"
+    ></textarea>
+
+    <div class="btns">
+      <button class="main" onclick="finish()">
+        응답 제출
+      </button>
+    </div>
+  `);
+}
+
+async function finish() {
+  if (!S) return;
+
+  enqueue(
+    event('survey',{
+      survey_text:
+        document.getElementById('answer')?.value || ''
+    })
+  );
+
+  show(`
+    <h2>응답 저장 중</h2>
+    <p>
+      저장이 완료되면 종료됩니다.
+      페이지를 닫지 마세요.
+    </p>
+  `);
+
+  await drain();
+
+  if (saveError) {
+    show(`
+      <p class="err">
+        저장 오류입니다.
+        저장 재시도 버튼을 눌러 주세요.
+        저장 상태가 정상이 되면
+        새로고침한 뒤 제출을 완료하세요.
+      </p>
+    `);
+    return;
+  }
+
+  localStorage.removeItem(KEY);
+  S = null;
+
+  show(`
+    <h2>참여 완료</h2>
+    <p>
+      응답이 모두 저장되었습니다.
+      감사합니다.
+    </p>
+  `);
+}
+
+async function withdraw() {
+  if (!S) return;
+
+  enqueue(
+    event('withdraw',{
+      total_clicks: S.clicks.length
+    })
+  );
+
+  show(`
+    <h2>참여 중단</h2>
+    <p>
+      지금까지의 기록을 저장 중입니다.
+    </p>
+  `);
+
+  await drain();
+
+  if (saveError) {
+    show(`
+      <p class="err">
+        저장 오류입니다.
+        저장 재시도 버튼을 눌러 주세요.
+      </p>
+    `);
+    return;
+  }
+
+  localStorage.removeItem(KEY);
+  S = null;
+
+  show(`
+    <h2>참여 중단 완료</h2>
+    <p>
+      이전까지 전송된 응답은
+      수업 과제 분석에 사용될 수 있습니다.
+    </p>
+  `);
+}
+
+/* ======================================
+   초기 실행
+====================================== */
+
+(function init() {
+  for (let i=0; i<STIMULI.length; i++) {
+    if (
+      STIMULI[i].p.length!==20 ||
+      STIMULI[i].p.reduce((a,b)=>a+b,0)!==1000
+    ) {
+      throw Error('실험 자극 오류');
+    }
+  }
+
+  let old = localStorage.getItem(KEY);
+
+  if (old) {
+    try {
+      let x = JSON.parse(old);
+
+      S = x.S;
+      Q = x.Q || [];
+
+      if (S) {
+        if (Q.length) {
+          void flush();
+        }
+
+        if (S.stage==='trial') {
+          draw();
+        } else if (S.stage==='survey') {
+          survey();
+        } else {
+          instructions();
+        }
+
+        return;
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  consent();
+})();
+
+</script>
+</body>
+</html>
