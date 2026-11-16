@@ -950,6 +950,248 @@ async function withdraw() {
    초기 실행
 ====================================== */
 
+/* ===== 수정 시작: 완료 후 제출 / 숫자 표시 제거 ===== */
+
+// 실험 도중에는 브라우저에만 기록합니다.
+enqueue = function (e) {
+  Q.push(e);
+  save();
+};
+
+// 기존 실험 시작 함수가 서버 응답을 기다리지 않도록 합니다.
+drain = async function () {
+  return true;
+};
+
+setStatus = function () {
+  status.textContent = saveError
+    ? '제출 오류: ' + saveError
+    : S && S.stage === 'submitting'
+      ? '완료된 응답을 Supabase로 저장 중입니다.'
+      : S
+        ? '응답은 최종 제출 전까지 브라우저에만 임시 저장됩니다.'
+        : '실험 시작 전';
+
+  retryButton.classList.toggle('hidden', !saveError);
+};
+
+// 모든 시행을 마친 경우에만 전체 자료를 한 번에 전송합니다.
+flush = async function () {
+  if (!S || S.stage !== 'submitting' || Q.length === 0) {
+    return true;
+  }
+
+  if (sending) {
+    while (sending) {
+      await new Promise(r => setTimeout(r, 80));
+    }
+    return !saveError && Q.length === 0;
+  }
+
+  sending = true;
+  saveError = '';
+  setStatus();
+
+  try {
+    const endpoint = new URL(
+      '/rest/v1/experiment_events?on_conflict=event_id',
+      SUPABASE_URL
+    );
+
+    const response = await fetch(endpoint.href, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_PUBLISHABLE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=ignore-duplicates,return=minimal'
+      },
+      body: JSON.stringify(Q)
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(
+        'HTTP ' + response.status + ': ' + body.slice(0, 180)
+      );
+    }
+
+    Q = [];
+    save();
+    return true;
+
+  } catch (e) {
+    saveError = String(e.message || e);
+    return false;
+
+  } finally {
+    sending = false;
+    setStatus();
+  }
+};
+
+// 최종 제출 및 제출 실패 시 재시도
+async function submitAll() {
+  if (!S || S.stage !== 'submitting') return;
+
+  show(`
+    <h2>응답 제출 중</h2>
+    <p>전체 자료를 저장하고 있습니다.</p>
+    <p>저장이 완료될 때까지 이 화면을 닫지 마세요.</p>
+  `);
+
+  const ok = await flush();
+
+  if (!ok) {
+    show(`
+      <h2>제출 실패</h2>
+      <p class="err">
+        응답은 이 브라우저에 남아 있습니다.
+        위의 저장 재시도 버튼을 눌러 주세요.
+      </p>
+    `);
+    return;
+  }
+
+  localStorage.removeItem(KEY);
+  S = null;
+  Q = [];
+  saveError = '';
+  setStatus();
+
+  show(`
+    <h2>참여 완료</h2>
+    <p>전체 응답이 정상적으로 저장되었습니다.</p>
+    <p>실험에 참여해 주셔서 감사합니다.</p>
+  `);
+}
+
+retry = function () {
+  saveError = '';
+  setStatus();
+  void submitAll();
+};
+
+// 마지막 응답 제출 버튼
+finish = async function () {
+  if (!S || S.stage !== 'survey') return;
+
+  const answer =
+    document.getElementById('answer')?.value || '';
+
+  enqueue(event('survey', {
+    survey_text: answer
+  }));
+
+  S.stage = 'submitting';
+  save();
+
+  await submitAll();
+};
+
+// 중도 중단: 서버 전송 없이 임시 기록 삭제
+withdraw = async function () {
+  if (!S) return;
+
+  const confirmed = confirm(
+    '참여를 중단하면 지금까지의 실험 응답을 ' +
+    '제출하지 않고 삭제합니다. 중단할까요?'
+  );
+
+  if (!confirmed) return;
+
+  localStorage.removeItem(KEY);
+
+  Q = [];
+  S = null;
+  saveError = '';
+  setStatus();
+
+  show(`
+    <h2>참여 중단</h2>
+    <p>실험 응답을 서버에 전송하지 않았습니다.</p>
+  `);
+};
+
+// 연구 참여 안내문 수정
+const previousConsent = consent;
+
+consent = function () {
+  previousConsent();
+
+  for (const p of screen.querySelectorAll('p')) {
+    if (p.textContent.includes('중단 이전에 전송된 응답')) {
+      p.textContent =
+        '참여는 자발적이며 언제든 중단할 수 있습니다. ' +
+        '실험을 완료하고 최종 제출 버튼을 누른 경우에만 ' +
+        '응답을 연구 데이터베이스에 저장합니다. ' +
+        '중도 중단 시 응답은 제출되지 않고 ' +
+        '분석에도 사용되지 않습니다.';
+    }
+  }
+};
+
+// 실험 방법 안내 수정
+const previousInstructions = instructions;
+
+instructions = function () {
+
+  // 제출 중 새로고침해도 다시 저장할 수 있도록 처리
+  if (S && S.stage === 'submitting') {
+    void submitAll();
+    return;
+  }
+
+  previousInstructions();
+
+  for (const p of screen.querySelectorAll('p')) {
+
+    if (p.textContent.includes('20개의 카드는 왼쪽부터')) {
+
+      p.textContent =
+        '1번부터 20번까지의 카드 중 하나가 목표 카드입니다. ' +
+        '목표 카드의 위치를 찾아주세요.';
+
+    } else if (
+      p.textContent.includes('각 위치 위의 막대와 숫자는')
+    ) {
+
+      p.textContent =
+        '각 막대와 숫자는 목표 카드가 그 위치에 있을 ' +
+        '확률입니다. 원하는 위치를 클릭해 확인하세요.';
+
+    } else if (
+      p.textContent.includes('선택한 카드의 숫자가')
+    ) {
+
+      p.textContent =
+        '클릭할 때마다 목표 카드가 그 위치보다 ' +
+        '왼쪽인지, 오른쪽인지, 또는 바로 그 위치인지 ' +
+        '알려줍니다.';
+    }
+  }
+};
+
+// 실험 화면에서 의미 없는 임의 숫자를 제거
+const previousDraw = draw;
+
+draw = function () {
+  previousDraw();
+
+  screen.querySelector('.target')?.remove();
+
+  const feedback = screen.querySelector('#feedback');
+
+  if (feedback) {
+    feedback.textContent =
+      feedback.textContent.replace(
+        /목표 숫자/g,
+        '목표 카드'
+      );
+  }
+};
+
+/* ===== 수정 끝 ===== */  
+  
 (function init() {
   for (let i=0; i<STIMULI.length; i++) {
     if (
