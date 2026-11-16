@@ -1005,7 +1005,24 @@ flush = async function () {
         'Content-Type': 'application/json',
         'Prefer': 'resolution=ignore-duplicates,return=minimal'
       },
-      body: JSON.stringify(Q)
+      body: JSON.stringify(Q.map(e => ({
+  event_id: e.event_id,
+  session_id: e.session_id,
+  kind: e.kind,
+  trial_no: e.trial_no ?? null,
+  condition: e.condition ?? null,
+  stimulus_id: e.stimulus_id ?? null,
+  peak_position: e.peak_position ?? null,
+  target_position: e.target_position ?? null,
+  click_index: e.click_index ?? null,
+  click_position: e.click_position ?? null,
+  feedback: e.feedback ?? null,
+  invalid_click: e.invalid_click ?? null,
+  rt_ms: e.rt_ms ?? null,
+  total_clicks: e.total_clicks ?? null,
+  probabilities: e.probabilities ?? null,
+  survey_text: e.survey_text ?? null
+})))
     });
 
     if (!response.ok) {
