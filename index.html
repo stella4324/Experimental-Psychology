@@ -1,67 +1,38 @@
-
 <!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>정보 탐색 실험</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#f5f7fb;color:#182b43;font-family:system-ui,"Noto Sans KR",sans-serif}
-main{max-width:1190px;margin:26px auto;padding:0 16px}
-h1{font-size:26px}
-h2{font-size:21px;margin:0 0 15px}
-article{padding:24px;background:#fff;border:1px solid #dbe3ec;border-radius:14px}
-p{line-height:1.75}
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#182b43;font-family:system-ui,"Noto Sans KR",sans-serif}
+main{max-width:1190px;margin:26px auto;padding:0 16px}h1{font-size:26px}h2{font-size:21px;margin:0 0 15px}
+article{padding:24px;background:#fff;border:1px solid #dbe3ec;border-radius:14px}p{line-height:1.75}
 button{cursor:pointer;padding:10px 15px;border-radius:8px;border:1px solid #b5c5d7;background:white;font:inherit}
-button:hover{background:#eef4fc}
-button:disabled{opacity:.5;cursor:default}
-.primary{background:#285ba6;color:#fff;border-color:#285ba6}
-.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.spaced{justify-content:space-between}
-.notice{background:#eef5fd;padding:13px;border-radius:9px;margin:15px 0}
-.bad{background:#fff0f0;color:#ad3131}
-small{color:#64758a}
-.graph{overflow-x:auto;border:1px solid #d9e2ee;border-radius:8px;padding:12px}
+button:hover{background:#eef4fc}button:disabled{opacity:.5;cursor:default}.primary{background:#285ba6;color:#fff;border-color:#285ba6}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.spaced{justify-content:space-between}
+.notice{background:#eef5fd;padding:13px;border-radius:9px;margin:15px 0}.bad{background:#fff0f0;color:#ad3131}
+small{color:#64758a}.graph{overflow-x:auto;border:1px solid #d9e2ee;border-radius:8px;padding:12px}
 .cells{display:grid;grid-template-columns:repeat(20,48px);gap:4px;min-width:1036px;align-items:end}
-.cell{text-align:center}
-.pct{font-size:12px;font-weight:bold}
-.axis{height:110px;width:32px;margin:7px auto;display:flex;align-items:end;background:#eaf0f6}
-.bar{width:100%;background:#5489c5}
-.pick{padding:7px 0;width:46px;font-size:12px}
-.picked{background:#dfeaff}
-label{display:block;margin:14px 0}
-input[type=checkbox]{width:18px;height:18px;vertical-align:middle}
-textarea{width:100%;height:110px;padding:10px;font:inherit}
-.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-</style>
-</head>
+.cell{text-align:center}.pct{font-size:12px;font-weight:bold}.axis{height:110px;width:32px;margin:7px auto;display:flex;align-items:end;background:#eaf0f6}
+.bar{width:100%;background:#5489c5}.pick{padding:7px 0;width:46px;font-size:12px}.picked{background:#dfeaff}
+label{display:block;margin:14px 0}input[type=checkbox]{width:18px;height:18px;vertical-align:middle}
+textarea{width:100%;height:110px;padding:10px;font:inherit}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 
-<body>
-<main>
-<h1>정보 탐색 실험</h1>
-<article id="app"></article>
-<p id="state"><small></small></p>
-</main>
-
+/* 연구 참여 설명문 */
+.study-notice{border-top:1px solid #e4e9f0;margin-top:16px}
+.study-notice h3{font-size:16px;margin:22px 0 8px;color:#253d58}
+.study-notice p{margin:7px 0 12px}
+.study-notice ul,.study-notice ol{margin:8px 0 15px;padding-left:23px;line-height:1.85}
+.study-notice li{margin:2px 0}
+.study-notice a{overflow-wrap:anywhere}
+.consent-controls{border-top:1px solid #e3e8ee;margin-top:24px;padding-top:14px}
+.consent-controls label{margin:14px 0}
+</style></head><body><main><h1>정보 탐색 실험</h1><article id="app"></article><p id="state"><small></small></p></main>
 <script>
 'use strict';
-
-// 연결 정보: 기존 파일에서 가져옴
-const SUPABASE_URL =
-  'https://fesuqweropbeudhnnsop.supabase.co';
-
-const SUPABASE_PUBLISHABLE_KEY =
-  'sb_publishable_c5bdNtdnE-Xs6TAEtlMzdA_76kwMnhi';
-
-const RESEARCH_EMAIL =
-  'stella4324@snu.ac.kr';
-
-const STORAGE_KEY =
-  'search_study_full_20261116_v2';
-
-// 확률 단위는 0.1%
-// 각 배열의 합계는 1000
+// 연결 정보는 앞서 첨부한 index.html의 값으로 채워 두었습니다.
+const SUPABASE_URL='https://fesuqweropbeudhnnsop.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_c5bdNtdnE-Xs6TAEtlMzdA_76kwMnhi';
+const RESEARCH_EMAIL='stella4324@snu.ac.kr'; // 이메일을 바꾸려면 이 줄만 수정
+const STORAGE_KEY='search_study_full_20261116_v2';
 const DATA = [
 [5,
 [98,75,60,39,175,75,81,16,53,24,18,32,54,60,28,20,24,23,22,23],
@@ -94,639 +65,183 @@ const DATA = [
 [20,14,18,20,25,28,14,31,56,48,95,55,32,51,24,180,72,83,61,73],
 [95,72,73,83,48,51,55,20,31,32,14,25,61,18,56,180,20,28,24,14]]
 ];
-
-const stimuli = DATA.flatMap(([peak,a,b],i) => [
-  {
-    id:`S${i+1}A`,
-    pair:i+1,
-    condition:'A',
-    peak,
-    p:a
-  },
-  {
-    id:`S${i+1}B`,
-    pair:i+1,
-    condition:'B',
-    peak,
-    p:b
-  }
+const stimuli=DATA.flatMap(([peak,a,b],i)=>[
+ {id:`S${i+1}A`,pair:i+1,condition:'A',peak,p:a},
+ {id:`S${i+1}B`,pair:i+1,condition:'B',peak,p:b}
 ]);
-
-const practice = [
-  {
-    id:'P1',
-    pair:0,
-    condition:'practice',
-    peak:null,
-    p:Array(20).fill(50)
-  },
-  {
-    id:'P2',
-    pair:0,
-    condition:'practice',
-    peak:null,
-    p:[
-      40,55,45,60,45,35,70,40,55,35,
-      60,45,50,55,35,65,45,50,45,70
-    ]
-  }
+const practice=[
+ {id:'P1',pair:0,condition:'practice',peak:null,p:Array(20).fill(50)},
+ {id:'P2',pair:0,condition:'practice',peak:null,p:[40,55,45,60,45,35,70,40,55,35,60,45,50,55,35,65,45,50,45,70]}
 ];
-
-const app = document.getElementById('app');
-
-let study = null;
-let uploading = false;
-
-const uid = () => crypto.randomUUID();
-
-const htmlEscape = x =>
-  String(x).replace(/[&<>"']/g,c=>({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#39;'
-  }[c]));
-
-function save() {
-  if(study) {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(study)
-    );
-  }
+const app=document.getElementById('app');
+let study=null, uploading=false;
+const uid=()=>crypto.randomUUID();
+const htmlEscape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function save(){if(study)localStorage.setItem(STORAGE_KEY,JSON.stringify(study));}
+function show(x){app.innerHTML=x;}
+function status(x){document.getElementById('state').textContent=x;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function sample(p){let n=Math.floor(Math.random()*1000);for(let i=0;i<p.length;i++){n-=p[i];if(n<0)return i+1;}throw Error('확률 합계 오류');}
+function sequence(){
+ for(let attempt=0;attempt<10000;attempt++){
+  let A=shuffle(stimuli.filter(t=>t.condition==='A').slice());
+  let B=shuffle(stimuli.filter(t=>t.condition==='B').slice());
+  let out=[];
+  for(let z=0;z<5;z++)out.push(...shuffle([...A.slice(2*z,2*z+2),...B.slice(2*z,2*z+2)]));
+  if(out.some((t,i)=>out.slice(Math.max(0,i-2),i).some(v=>v.pair===t.pair)))continue;
+  return [...practice,...out].map(t=>({...t,target:sample(t.p)}));
+ }
+ throw Error('시행 순서 생성 실패');
 }
-
-function show(x) {
-  app.innerHTML = x;
+function addEvent(kind,fields={}){
+ let t=study.trials[study.index];
+ study.events.push({
+  event_id:uid(),session_id:study.id,kind,
+  trial_no:t?(study.index<2?study.index+1:study.index-1):null,
+  condition:t?t.condition:null,stimulus_id:t?t.id:null,
+  peak_position:t?t.peak:null,target_position:t?t.target:null,
+  click_index:null,click_position:null,feedback:null,invalid_click:null,
+  rt_ms:null,total_clicks:null,probabilities:null,survey_text:null,
+  ...fields
+ });
+ save();
 }
+function consent(){
+ show(`
+ <h2>연구 참여 안내 및 동의</h2>
+ <p>아래 연구 설명문을 확인한 뒤 참여 여부를 결정해 주세요.</p>
+ <div class="study-notice">
+   <h3>1. 연구 책임자</h3>
+   <p>조수안 (서울대학교 첨단융합학부 융합데이터과학전공 학부생)</p>
 
-function status(x) {
-  document.getElementById('state').textContent = x;
+   <h3>2. 연구 목적</h3>
+   <p>본 연구는 확률 정보가 주어진 상황에서 사람들이 목표를 탐색하는 방식을 알아보기 위한 실험으로, 서울대학교 「실험심리입문 및 실험」 수업의 최종 과제 목적으로 진행됩니다.</p>
+
+   <h3>3. 연구 참여 대상</h3>
+   <p>만 19세 이상의 성인이라면 누구나 참여할 수 있으며, 연구 참여를 위한 특별한 사전 지식이나 경험은 필요하지 않습니다. 한국어 안내문을 이해하고 웹 브라우저에서 과제를 수행할 수 있어야 합니다.</p>
+
+   <h3>4. 연구 참여 기간 및 장소</h3>
+   <ul>
+     <li><b>참여 기간:</b> 2026년 11월 16일 ~ 11월 30일</li>
+     <li><b>소요 시간:</b> 약 5~10분 (1회 참여)</li>
+     <li><b>참여 장소:</b> 온라인 (웹 브라우저 기반 실험 프로그램)</li>
+     <li><b>참여 환경:</b> PC 또는 노트북 권장</li>
+   </ul>
+
+   <h3>5. 연구 참여 방법 및 절차</h3>
+   <p>본 실험에서는 20개 위치에 제시된 확률 정보를 확인하고, 목표가 있는 위치를 찾아가는 과제를 수행합니다. 참여자는 각 위치의 확률을 참고해 원하는 위치를 선택할 수 있으며, 선택 후 목표가 해당 위치의 왼쪽에 있는지, 오른쪽에 있는지, 또는 정답인지를 알려줍니다. 이 정보를 이용하여 가능한 한 적은 횟수로 목표를 찾는 것이 과제의 목적입니다.</p>
+   <ol>
+     <li>연구 참여 안내 확인 및 참여 동의</li>
+     <li>실험 방법 안내 및 연습 시행 2회</li>
+     <li>본 실험 20회 수행</li>
+     <li>탐색 방법에 관한 간단한 질문 응답 (선택 사항)</li>
+     <li>최종 응답 제출</li>
+   </ol>
+   <p>별도의 프로그램 설치는 필요하지 않으며 시간 제한은 없습니다. 모든 확률 정보를 한 화면에서 확인하기 쉽도록 가급적 PC나 노트북을 사용하고, 조용한 환경에서 한 번만 참여해 주세요.</p>
+
+   <h3>6. 자발적 참여 및 중도 철회</h3>
+   <p>연구 참여는 자발적으로 이루어지며, 참여를 거부하거나 도중에 중단하더라도 어떠한 불이익이 없습니다. 언제든 실험을 중단할 수 있으며, 최종 제출 전에 중단한 응답은 서버에 전송되지 않고 분석에 사용되지 않습니다.</p>
+
+   <h3>7. 예상되는 위험 및 보상</h3>
+   <p>과제를 수행하는 과정에서 일시적인 피로감을 느낄 수 있습니다. 불편함을 느끼는 경우 언제든 참여를 중단할 수 있습니다. 연구 참여로 인한 직접적인 보상이나 이득은 없습니다.</p>
+
+   <h3>8. 개인정보 수집 및 보호</h3>
+   <p>과제의 선택 위치와 순서, 클릭 횟수, 반응시간 및 간단한 설문 응답을 수집합니다. 이름, 학번, 연락처, 이메일은 별도로 수집하지 않으며, 응답은 무작위로 부여된 코드로 저장하여 보관합니다.</p>
+   <p>수집된 자료는 「실험심리입문 및 실험」의 최종 과제 목적으로만 사용하며, 개별 응답 자료는 공개하지 않습니다. 연구 자료는 접근 권한을 제한하여 관리하고, 성적이 확정된 후 삭제할 예정입니다. 웹 호스팅 및 저장 서비스의 기술적 접속 기록은 각 서비스의 정책을 따릅니다.</p>
+
+   <h3>9. 연구 문의</h3>
+   <p>연구와 관련하여 궁금한 사항이 있다면 아래의 연락처로 문의해 주시기 바랍니다.</p>
+   <p><b>연구 담당자:</b> 조수안<br><b>이메일:</b> <a href="mailto:${htmlEscape(RESEARCH_EMAIL)}">${htmlEscape(RESEARCH_EMAIL)}</a></p>
+ </div>
+ <div class="consent-controls">
+   <label><input id="adult" type="checkbox"> 만 19세 이상입니다.</label>
+   <label><input id="agree" type="checkbox"> 위 내용을 읽고 자발적으로 연구 참여에 동의합니다.</label>
+   <button id="begin" class="primary">동의하고 시작</button>
+   <div id="error" role="alert"></div>
+ </div>`);
+ document.getElementById('begin').onclick=()=>{
+  if(!document.getElementById('adult').checked||!document.getElementById('agree').checked){document.getElementById('error').textContent='연령 확인과 동의가 필요합니다.';return;}
+  study={id:uid(),trials:sequence(),index:0,clicks:[],events:[],stage:'instructions',trialStart:0,lastClick:0,survey:''};
+  addEvent('start');save();instructions();
+ };
+ status('동의 전에는 실험 데이터를 생성하지 않습니다.');
 }
-
-function shuffle(a) {
-  for(let i=a.length-1;i>0;i--) {
-    let j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
+function instructions(){
+ study.stage='instructions';save();
+ show(`<h2>실험 방법</h2><p>20개의 위치 중 하나에 목표 카드가 있습니다. 각 위치의 막대그래프와 숫자는 그 위치가 정답일 확률입니다.</p>
+ <p>원하는 카드를 누르면 목표 카드가 <b>왼쪽 또는 오른쪽에 있는지</b>, 아니면 <b>정답인지</b> 알려줍니다. 가능한 적은 클릭으로 목표를 찾으세요.</p>
+ <p>연습 2회 이후 본 실험 20회가 진행됩니다. 시간 제한은 없습니다.</p>
+ <div class="buttons"><button class="primary" id="go">연습 시작</button><button id="stop">참여 중단</button></div>`);
+ document.getElementById('go').onclick=()=>{study.stage='trial';study.trialStart=Date.now();study.lastClick=study.trialStart;save();trial();};
+ document.getElementById('stop').onclick=withdraw;
 }
-
-function sample(p) {
-  let n=Math.floor(Math.random()*1000);
-
-  for(let i=0;i<p.length;i++) {
-    n-=p[i];
-    if(n<0) return i+1;
-  }
-
-  throw Error('확률 합계 오류');
+function trial(){
+ if(study.index>=22){survey();return;}
+ study.stage='trial';save();
+ let t=study.trials[study.index],last=study.clicks.at(-1),done=last?.feedback==='correct';
+ let label=study.index<2?`연습 ${study.index+1}/2`:`본 실험 ${study.index-1}/20`;
+ let response=last?(done?'정답입니다.':last.feedback==='right'?'목표 카드는 선택한 위치보다 오른쪽에 있습니다.':'목표 카드는 선택한 위치보다 왼쪽에 있습니다.'):'원하는 위치를 클릭하세요.';
+ show(`<div class="row spaced"><h2>${label}</h2><b>목표 카드의 위치를 찾으세요</b></div>
+ <p><small>모든 막대는 같은 0~20% 척도입니다. 작은 화면에서는 좌우로 스크롤할 수 있습니다.</small></p>
+ <div class="graph"><div class="cells" id="cells"></div></div>
+ <p class="notice" id="feedback">${response}</p>
+ <div class="buttons"><button class="primary" id="next" ${done?'':'hidden'}>다음 시행</button><button id="stop">참여 중단</button></div>`);
+ let cells=document.getElementById('cells');
+ t.p.forEach((p,i)=>{
+  let node=document.createElement('div');node.className='cell';
+  node.innerHTML=`<div class="pct">${(p/10).toFixed(1)}%</div><div class="axis"><div class="bar" style="height:${p/200*100}%"></div></div><div>${i+1}번</div>`;
+  let b=document.createElement('button');b.className='pick'+(study.clicks.some(c=>c.position===i+1)?' picked':'');b.textContent='확인';b.disabled=!!done;b.onclick=()=>click(i+1);
+  node.appendChild(b);cells.appendChild(node);
+ });
+ let next=document.getElementById('next');next.hidden=!done;
+ next.onclick=()=>{if(!study.clicks.at(-1)||study.clicks.at(-1).feedback!=='correct')return;study.index++;study.clicks=[];study.trialStart=Date.now();study.lastClick=study.trialStart;save();trial();};
+ document.getElementById('stop').onclick=withdraw;
+ status('응답은 최종 제출 전까지 브라우저에만 임시 보관됩니다.');
 }
-
-function sequence() {
-  for(let attempt=0;attempt<10000;attempt++) {
-    let A=shuffle(
-      stimuli.filter(t=>t.condition==='A').slice()
-    );
-
-    let B=shuffle(
-      stimuli.filter(t=>t.condition==='B').slice()
-    );
-
-    let out=[];
-
-    for(let z=0;z<5;z++) {
-      out.push(...shuffle([
-        ...A.slice(2*z,2*z+2),
-        ...B.slice(2*z,2*z+2)
-      ]));
-    }
-
-    if(out.some((t,i)=>
-      out.slice(Math.max(0,i-2),i)
-         .some(v=>v.pair===t.pair)
-    )) continue;
-
-    return [...practice,...out].map(t=>({
-      ...t,
-      target:sample(t.p)
-    }));
-  }
-
-  throw Error('시행 순서 생성 실패');
+function click(position){
+ if(study.stage!=='trial'||study.clicks.at(-1)?.feedback==='correct')return;
+ let t=study.trials[study.index],now=Date.now(),lo=1,hi=20;
+ for(let c of study.clicks){if(c.feedback==='right')lo=Math.max(lo,c.position+1);if(c.feedback==='left')hi=Math.min(hi,c.position-1);}
+ let feedback=position===t.target?'correct':position<t.target?'right':'left';
+ let item={position,feedback,invalid:position<lo||position>hi};study.clicks.push(item);
+ addEvent('click',{click_index:study.clicks.length,click_position:position,feedback,invalid_click:item.invalid,rt_ms:now-study.lastClick,probabilities:t.p});
+ if(feedback==='correct')addEvent('trial_done',{total_clicks:study.clicks.length,rt_ms:now-study.trialStart});
+ study.lastClick=now;save();trial();
 }
-
-function addEvent(kind,fields={}) {
-  let t=study.trials[study.index];
-
-  study.events.push({
-    event_id:uid(),
-    session_id:study.id,
-    kind,
-    trial_no:t
-      ?(study.index<2
-        ?study.index+1
-        :study.index-1)
-      :null,
-    condition:t?t.condition:null,
-    stimulus_id:t?t.id:null,
-    peak_position:t?t.peak:null,
-    target_position:t?t.target:null,
-    click_index:null,
-    click_position:null,
-    feedback:null,
-    invalid_click:null,
-    rt_ms:null,
-    total_clicks:null,
-    probabilities:null,
-    survey_text:null,
-    ...fields
-  });
-
-  save();
+function survey(){
+ study.stage='survey';save();
+ show(`<h2>실험 완료</h2><p>위치를 선택할 때 주로 어떤 기준으로 판단했나요? (선택 사항)</p>
+ <textarea id="strategy" maxlength="1200"></textarea><div class="buttons"><button class="primary" id="submit">최종 응답 제출</button><button id="stop">제출하지 않고 중단</button></div>`);
+ document.getElementById('strategy').value=study.survey||'';
+ document.getElementById('submit').onclick=()=>{study.survey=document.getElementById('strategy').value;addEvent('survey',{survey_text:study.survey});study.stage='submitting';save();submit();};
+ document.getElementById('stop').onclick=withdraw;
 }
-
-function consent() {
-  show(`
-    <h2>연구 참여 안내 및 동의</h2>
-
-    <p>
-      본 연구는 확률 정보가 주어진 상황에서
-      사람들이 목표를 탐색하는 방식을 알아보는
-      <b>실험심리입문 및 실험 수업 과제</b>입니다.
-    </p>
-
-    <p>
-      만 19세 이상 성인이 참여할 수 있으며,
-      연습 2회와 본 실험 20회를 진행합니다.
-      예상 소요시간은 약 10분입니다.
-    </p>
-
-    <p>
-      참여는 자발적이고 언제든 중단할 수 있습니다.
-      <b>실험 완료 후 최종 제출한 응답만
-      서버에 저장</b>되며, 중도 중단한 응답은
-      전송되지 않고 분석에도 사용되지 않습니다.
-    </p>
-
-    <p>
-      이름·학번·연락처 등 개인식별정보를
-      수집하지 않습니다.
-      응답은 수업 과제 목적으로만 사용하며
-      공개하지 않고 성적 확정 후 삭제합니다.
-      호스팅 및 저장 서비스의 기술적 접속 기록은
-      각 서비스의 정책을 따릅니다.
-    </p>
-
-    <p>연구 문의: ${htmlEscape(RESEARCH_EMAIL)}</p>
-
-    <label>
-      <input id="adult" type="checkbox">
-      만 19세 이상입니다.
-    </label>
-
-    <label>
-      <input id="agree" type="checkbox">
-      안내를 읽고 자발적으로 참여에 동의합니다.
-    </label>
-
-    <button id="begin" class="primary">
-      동의하고 시작
-    </button>
-
-    <div id="error"></div>
-  `);
-
-  document.getElementById('begin').onclick=()=>{
-    if(
-      !document.getElementById('adult').checked ||
-      !document.getElementById('agree').checked
-    ) {
-      document.getElementById('error').textContent=
-        '연령 확인과 동의가 필요합니다.';
-      return;
-    }
-
-    study={
-      id:uid(),
-      trials:sequence(),
-      index:0,
-      clicks:[],
-      events:[],
-      stage:'instructions',
-      trialStart:0,
-      lastClick:0,
-      survey:''
-    };
-
-    addEvent('start');
-    save();
-    instructions();
-  };
-
-  status('동의 전에는 실험 데이터를 생성하지 않습니다.');
+function withdraw(){if(uploading)return;if(!confirm('참여를 중단하고 제출하지 않은 응답을 삭제할까요?'))return;localStorage.removeItem(STORAGE_KEY);study=null;show('<h2>참여 중단</h2><p>응답을 서버에 제출하지 않았습니다.</p>');status('');}
+async function submit(){
+ if(uploading||!study||study.stage!=='submitting')return;uploading=true;
+ show('<h2>응답 저장 중</h2><p>창을 닫지 마세요.</p><div id="saveError"></div>');
+ try{
+  const endpoint=new URL('/rest/v1/rpc/save_psychology_session',SUPABASE_URL).href;
+  const resp=await fetch(endpoint,{method:'POST',headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({p_events:study.events})});
+  if(!resp.ok)throw Error('HTTP '+resp.status+': '+(await resp.text()).slice(0,300));
+  localStorage.removeItem(STORAGE_KEY);study=null;
+  show('<h2>제출 완료</h2><p>응답이 정상적으로 저장되었습니다. 참여해 주셔서 감사합니다.</p>');status('저장 완료');
+ }catch(e){document.getElementById('saveError').innerHTML='<p class="notice bad" id="err"></p><button id="retry">저장 재시도</button>';document.getElementById('err').textContent=String(e.message||e);document.getElementById('retry').onclick=submit;status('서버에 저장하지 못했습니다. 브라우저에 응답이 남아 있습니다.');}
+ finally{uploading=false;}
 }
-
-function instructions() {
-  study.stage='instructions';
-  save();
-
-  show(`
-    <h2>실험 방법</h2>
-
-    <p>
-      20개의 위치 중 하나에 목표 카드가 있습니다.
-      각 위치의 막대그래프와 숫자는
-      그 위치가 정답일 확률입니다.
-    </p>
-
-    <p>
-      원하는 카드를 누르면 목표 카드가
-      <b>왼쪽 또는 오른쪽에 있는지</b>,
-      아니면 <b>정답인지</b> 알려줍니다.
-      가능한 적은 클릭으로 목표를 찾으세요.
-    </p>
-
-    <p>
-      연습 2회 이후 본 실험 20회가 진행됩니다.
-      시간 제한은 없습니다.
-    </p>
-
-    <div class="buttons">
-      <button class="primary" id="go">
-        연습 시작
-      </button>
-      <button id="stop">참여 중단</button>
-    </div>
-  `);
-
-  document.getElementById('go').onclick=()=>{
-    study.stage='trial';
-    study.trialStart=Date.now();
-    study.lastClick=study.trialStart;
-    save();
-    trial();
-  };
-
-  document.getElementById('stop').onclick=withdraw;
+function init(){
+ for(let t of [...stimuli,...practice])if(t.p.length!==20||t.p.reduce((a,b)=>a+b,0)!==1000)throw Error(t.id+' 확률 합계 오류');
+ try{study=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');}catch(_){study=null;}
+ if(!study){consent();return;}
+ if(study.stage==='instructions')instructions();
+ else if(study.stage==='trial')trial();
+ else if(study.stage==='survey')survey();
+ else if(study.stage==='submitting'){
+  show('<h2>미제출 응답이 있습니다</h2><p>저장 재시도 버튼을 눌러 주세요.</p><button class="primary" id="retry">저장 재시도</button>');document.getElementById('retry').onclick=submit;
+ }else consent();
 }
-
-function trial() {
-  if(study.index>=22) {
-    survey();
-    return;
-  }
-
-  study.stage='trial';
-  save();
-
-  let t=study.trials[study.index];
-  let last=study.clicks.at(-1);
-  let done=last?.feedback==='correct';
-
-  let label=study.index<2
-    ?`연습 ${study.index+1}/2`
-    :`본 실험 ${study.index-1}/20`;
-
-  let response=last
-    ?(done
-      ?'정답입니다.'
-      :last.feedback==='right'
-        ?'목표 카드는 선택한 위치보다 오른쪽에 있습니다.'
-        :'목표 카드는 선택한 위치보다 왼쪽에 있습니다.')
-    :'원하는 위치를 클릭하세요.';
-
-  show(`
-    <div class="row spaced">
-      <h2>${label}</h2>
-      <b>목표 카드의 위치를 찾으세요</b>
-    </div>
-
-    <p>
-      <small>
-        모든 막대는 같은 0~20% 척도입니다.
-        작은 화면에서는 좌우로 스크롤할 수 있습니다.
-      </small>
-    </p>
-
-    <div class="graph">
-      <div class="cells" id="cells"></div>
-    </div>
-
-    <p class="notice" id="feedback">${response}</p>
-
-    <div class="buttons">
-      <button class="primary" id="next">
-        다음 시행
-      </button>
-      <button id="stop">참여 중단</button>
-    </div>
-  `);
-
-  let cells=document.getElementById('cells');
-
-  t.p.forEach((p,i)=>{
-    let node=document.createElement('div');
-    node.className='cell';
-
-    node.innerHTML=`
-      <div class="pct">${(p/10).toFixed(1)}%</div>
-      <div class="axis">
-        <div class="bar"
-          style="height:${p/200*100}%">
-        </div>
-      </div>
-      <div>${i+1}번</div>
-    `;
-
-    let b=document.createElement('button');
-
-    b.className='pick'+(
-      study.clicks.some(c=>c.position===i+1)
-        ?' picked'
-        :''
-    );
-
-    b.textContent='확인';
-    b.disabled=!!done;
-    b.onclick=()=>click(i+1);
-
-    node.appendChild(b);
-    cells.appendChild(node);
-  });
-
-  let next=document.getElementById('next');
-  next.hidden=!done;
-
-  next.onclick=()=>{
-    if(
-      !study.clicks.at(-1) ||
-      study.clicks.at(-1).feedback!=='correct'
-    ) return;
-
-    study.index++;
-    study.clicks=[];
-    study.trialStart=Date.now();
-    study.lastClick=study.trialStart;
-
-    save();
-    trial();
-  };
-
-  document.getElementById('stop').onclick=withdraw;
-
-  status(
-    '응답은 최종 제출 전까지 브라우저에만 임시 보관됩니다.'
-  );
-}
-
-function click(position) {
-  if(
-    study.stage!=='trial' ||
-    study.clicks.at(-1)?.feedback==='correct'
-  ) return;
-
-  let t=study.trials[study.index];
-  let now=Date.now();
-  let lo=1;
-  let hi=20;
-
-  for(let c of study.clicks) {
-    if(c.feedback==='right') {
-      lo=Math.max(lo,c.position+1);
-    }
-
-    if(c.feedback==='left') {
-      hi=Math.min(hi,c.position-1);
-    }
-  }
-
-  let feedback=position===t.target
-    ?'correct'
-    :position<t.target
-      ?'right'
-      :'left';
-
-  let item={
-    position,
-    feedback,
-    invalid:position<lo||position>hi
-  };
-
-  study.clicks.push(item);
-
-  addEvent('click',{
-    click_index:study.clicks.length,
-    click_position:position,
-    feedback,
-    invalid_click:item.invalid,
-    rt_ms:now-study.lastClick,
-    probabilities:t.p
-  });
-
-  if(feedback==='correct') {
-    addEvent('trial_done',{
-      total_clicks:study.clicks.length,
-      rt_ms:now-study.trialStart
-    });
-  }
-
-  study.lastClick=now;
-  save();
-  trial();
-}
-
-function survey() {
-  study.stage='survey';
-  save();
-
-  show(`
-    <h2>실험 완료</h2>
-
-    <p>
-      위치를 선택할 때 주로 어떤 기준으로
-      판단했나요? (선택 사항)
-    </p>
-
-    <textarea
-      id="strategy"
-      maxlength="1200"
-    ></textarea>
-
-    <div class="buttons">
-      <button class="primary" id="submit">
-        최종 응답 제출
-      </button>
-
-      <button id="stop">
-        제출하지 않고 중단
-      </button>
-    </div>
-  `);
-
-  document.getElementById('strategy').value=
-    study.survey||'';
-
-  document.getElementById('submit').onclick=()=>{
-    study.survey=
-      document.getElementById('strategy').value;
-
-    addEvent('survey',{
-      survey_text:study.survey
-    });
-
-    study.stage='submitting';
-    save();
-    submit();
-  };
-
-  document.getElementById('stop').onclick=withdraw;
-}
-
-function withdraw() {
-  if(uploading) return;
-
-  if(!confirm(
-    '참여를 중단하고 제출하지 않은 응답을 삭제할까요?'
-  )) return;
-
-  localStorage.removeItem(STORAGE_KEY);
-  study=null;
-
-  show(`
-    <h2>참여 중단</h2>
-    <p>응답을 서버에 제출하지 않았습니다.</p>
-  `);
-
-  status('');
-}
-
-async function submit() {
-  if(
-    uploading ||
-    !study ||
-    study.stage!=='submitting'
-  ) return;
-
-  uploading=true;
-
-  show(`
-    <h2>응답 저장 중</h2>
-    <p>창을 닫지 마세요.</p>
-    <div id="saveError"></div>
-  `);
-
-  try {
-    const endpoint=new URL(
-      '/rest/v1/rpc/save_psychology_session',
-      SUPABASE_URL
-    ).href;
-
-    const resp=await fetch(endpoint,{
-      method:'POST',
-      headers:{
-        'apikey':SUPABASE_PUBLISHABLE_KEY,
-        'Content-Type':'application/json',
-        'Prefer':'return=minimal'
-      },
-      body:JSON.stringify({
-        p_events:study.events
-      })
-    });
-
-    if(!resp.ok) {
-      throw Error(
-        'HTTP '+resp.status+': '+
-        (await resp.text()).slice(0,300)
-      );
-    }
-
-    localStorage.removeItem(STORAGE_KEY);
-    study=null;
-
-    show(`
-      <h2>제출 완료</h2>
-      <p>
-        응답이 정상적으로 저장되었습니다.
-        참여해 주셔서 감사합니다.
-      </p>
-    `);
-
-    status('저장 완료');
-
-  } catch(e) {
-    document.getElementById('saveError').innerHTML=`
-      <p class="notice bad" id="err"></p>
-      <button id="retry">저장 재시도</button>
-    `;
-
-    document.getElementById('err').textContent=
-      String(e.message||e);
-
-    document.getElementById('retry').onclick=submit;
-
-    status(
-      '서버에 저장하지 못했습니다. '+
-      '브라우저에 응답이 남아 있습니다.'
-    );
-
-  } finally {
-    uploading=false;
-  }
-}
-
-function init() {
-  for(let t of [...stimuli,...practice]) {
-    if(
-      t.p.length!==20 ||
-      t.p.reduce((a,b)=>a+b,0)!==1000
-    ) {
-      throw Error(t.id+' 확률 합계 오류');
-    }
-  }
-
-  try {
-    study=JSON.parse(
-      localStorage.getItem(STORAGE_KEY)||'null'
-    );
-  } catch(_) {
-    study=null;
-  }
-
-  if(!study) {
-    consent();
-    return;
-  }
-
-  if(study.stage==='instructions') {
-    instructions();
-
-  } else if(study.stage==='trial') {
-    trial();
-
-  } else if(study.stage==='survey') {
-    survey();
-
-  } else if(study.stage==='submitting') {
-    show(`
-      <h2>미제출 응답이 있습니다</h2>
-      <p>저장 재시도 버튼을 눌러 주세요.</p>
-      <button class="primary" id="retry">
-        저장 재시도
-      </button>
-    `);
-
-    document.getElementById('retry').onclick=submit;
-
-  } else {
-    consent();
-  }
-}
-
 init();
-</script>
-</body>
-</html>
+</script></body></html>
+
 
 
